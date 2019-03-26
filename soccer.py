@@ -21,7 +21,7 @@ goal_height = 0.11  # z of marker on goal
 goal_depth = 0.073
 goal_width = 0.184  # inner post distance
 goal_marker_position = np.array([- marker_length / 2 - 0.005, 0.0, 0.0])  # goalkeeper point of view: x pointing forward, z zero level on goal heigth
-img_contour = cv2.imread('/home/schanowski_uidxz/Documents/RealSense/Intro/shape_matching_circle.png', 0)
+img_contour = cv2.imread('shape_matching_circle.png', 0)
 ret, img_contour = cv2.threshold(img_contour, 127, 255, 0)
 _, img_contours, _ = cv2.findContours(img_contour, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 ball_contour = img_contours[0]
@@ -44,7 +44,7 @@ score = 0
 score_string = '0:0'
 
 # loading calibration matrix
-calibrationData = np.load('/home/schanowski_uidxz/Pictures/Calibration_3/calibration.npy')
+calibrationData = np.load('calibration.npy')
 mtx = calibrationData[0]
 dist = calibrationData[1]
 
@@ -141,7 +141,7 @@ try:
 
         if k == ord('q'):
             ball.update_thresh()
-            np.save('/home/schanowski_uidxz/Documents/RealSense/Intro/threshholds_ball', ball.thresh_rbg)
+            np.save('threshholds_ball', ball.thresh_rbg)
             break
 
 

@@ -10,7 +10,7 @@ class Ball(object):
         self.radius = diameter / 2
         self.color = color
         self.contour = circular_contour
-        self.thresh_rbg = np.load('/home/schanowski_uidxz/Documents/RealSense/Intro/threshholds_ball.npy')
+        self.thresh_rbg = np.load('threshholds_ball.npy')
         self.thresh = []
         self.kalman = kalman()
 
@@ -104,7 +104,7 @@ class Ball(object):
         return image_draw
 
     def calculate_position(self, field, matrix, distortion):
-        if not self.moving and not self.position_calculated and field.set:
+        if not self.moving and self.visible and not self.position_calculated and field.set:
             # pixel coordinate of ball center, z value of board
             dst = cv2.undistortPoints(np.array([[self.center_r]]), matrix, distortion, None, matrix)
             image_point = np.array([[dst[0][0][0]], [dst[0][0][1]], [1]])
