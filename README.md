@@ -2,10 +2,10 @@
 Run soccer.py
 
 ## Keys to initialize field
-Press 's' to set field.
-Press 'g' to set goal.
-Press 'h' to edit HSV-threshhold. When done press 'h' again.
-Press 'q' to quit program.
+* Press 's' to set field.
+* Press 'g' to set goal.
+* Press 'h' to edit HSV-threshhold. When done press 'h' again.
+* Press 'q' to quit program.
 
 ## Functions of soccer.py to get values for robot
 ```
