@@ -1,5 +1,5 @@
 # Tracking Ball
-Run soccer.py
+run soccer.py
 
 ## Keys to initialize field
 * Press 's' to set field.
