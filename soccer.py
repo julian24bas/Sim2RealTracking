@@ -26,7 +26,7 @@ ret, img_contour = cv2.threshold(img_contour, 127, 255, 0)
 _, img_contours, _ = cv2.findContours(img_contour, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 ball_contour = img_contours[0]
 
-marker_center4 = np.array([- (0.005 + (marker_length / 2)), 0.022, marker_heigth])
+marker_center4 = np.array([- (0.005 + (marker_length / 2)), 0.022, marker_heigth])  # 0.005 = thickness of white frame around marker
 marker_center1 = marker_center4 + np.array([0.0, marker_separation_y, 0])
 marker_center2 = marker_center4 + np.array([marker_separation_x, marker_separation_y, 0])
 marker_center3 = marker_center4 + np.array([marker_separation_x, 0.0, 0])
@@ -41,12 +41,75 @@ scored = False
 current_time = 0.0
 wait_timer = 0.0
 score = 0
+score_last = 0  # score on last ball state
 score_string = '0:0'
 
 # loading calibration matrix
 calibrationData = np.load('calibration.npy')
 mtx = calibrationData[0]
 dist = calibrationData[1]
+
+
+# functions to get data for robot
+def get_ball_state():
+    # returns list with five elements containing x-pixel-coordinate of ball, y-pixel-coordinate of ball,
+    # bool of ball moving, bool if goal was scored since last call of function, bool of ball visible
+    # (bool: 1.0 for True, 0.0 for False)
+    global ball
+    global field
+    global score
+    global score_last
+
+    ball_state = [0.0, 0.0, 0.0, 0.0, 0.0]
+    ball_state[0] = ball.center_r[0]
+    ball_state[1] = ball.center_r[1]
+
+    if ball.moving:
+        ball_state[2] = 1.0
+    else:
+        ball_state[2] = 0.0
+
+    if score is not score_last:
+        score_last = score
+        ball_state[3] = 1.0
+    else:
+        ball_state[3] = 0.0
+
+    if ball.visible:
+        ball_state[4] = 1.0
+    else:
+        ball_state[4] = 0.0
+
+    return ball_state
+
+
+def get_local_ball_position():
+    # returns list with two elements containing x-world-coordinate of ball, y-world-coordinate of ball
+    global ball
+    global field
+    global mtx
+    global dist
+
+    ball.calculate_position(field, mtx, dist)
+    local_ball_position = [0.0, 0.0]
+    local_ball_position[0] = ball.position.item(0)
+    local_ball_position[1] = ball.position.item(1)
+
+    return local_ball_position
+
+def get_goal_transform():
+    # returns list with three elements containing x-world-coordinate of goal, y-world-coordinate of goal,
+    # rotation of goal around z-axis
+    global goal
+
+    goal_transform = [0.0, 0.0, 0.0]
+    goal_transform[0] = goal.goalline_position.item(0)
+    goal_transform[1] = goal.goalline_position.item(1)
+    goal_transform[2] = goal.rotation_z
+
+    return goal_transform
+
+
 
 #save video to file
 #fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -79,7 +142,6 @@ try:
         delta_time = (current_time - prior_time) / cv2.getTickFrequency();
 
         mask = ball.track(color_image, field, delta_time)
-        ball.calculate_position(field, mtx, dist)
         color_image_draw = field.is_visible(color_image_draw)
         color_image_draw = field.draw_roi(color_image_draw)
         color_image_draw = field.draw_goal(color_image_draw)
@@ -144,10 +206,12 @@ try:
             np.save('threshholds_ball', ball.thresh_rbg)
             break
 
+        if k == ord('t'):
+            print(get_goal_transform())
+
 
 finally:
 
     # Stop streaming
     #out.release()
     pipeline.stop()
-

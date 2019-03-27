@@ -38,7 +38,9 @@ class Goal(object):
         self.tvec = None
         self.rot_mtx = None
         self.position = None
+        self.goalline_position = None
         self.rotation = None
+        self.rotation_z = None
         self.visible = False
         self.set = False
         self.start = None
@@ -184,19 +186,20 @@ class Field(object):
                 self.goal.rot_mtx, jacobian = cv2.Rodrigues(self.goal.rvec)
                 _, _, _, _, _, self.goal.rotation = cv2.RQDecomp3x3(np.matmul(self.goal.rot_mtx, np.transpose(self.rot_mtx)))
                 rot_direction = np.matmul(self.goal.rotation, np.array([[1], [0], [0]]))
-                arrow_start = self.goal.position + self.goal.length * rot_direction
-                object_points = np.array([self.goal.position, arrow_start])
+                self.goal.rotation_z = np.arctan2(rot_direction.item(1,0), rot_direction.item(0,0))
+                self.goal.goalline_position = self.goal.position - self.goal.marker_position.item(0) * rot_direction
+                arrow_start = self.goal.goalline_position + self.goal.length * rot_direction
+                object_points = np.array([self.goal.goalline_position, arrow_start])
                 image_points_arrow, jacobian = cv2.projectPoints(object_points, self.rvec, self.tvec, matrix, distortion)
                 image_points_arrow = image_points_arrow.astype(int)
                 self.goal.end = np.array([image_points_arrow[0][0][0], image_points_arrow[0][0][1]])
                 self.goal.start = np.array([image_points_arrow[1][0][0], image_points_arrow[1][0][1]])
 
                 # find valid goal and scoring polygon
-                goal_x = arrow_start - self.goal.position
+                goal_x = self.goal.goalline_position - self.goal.position
                 goal_x = goal_x / np.linalg.norm(goal_x)
                 goal_y = np.array([[- goal_x[1][0]], [goal_x[0][0]], [0]])
-                goalline_point = self.goal.position - self.goal.marker_position[0] * goal_x
-                goalline_point = goalline_point - self.goal.marker_position[1] * goal_y
+                goalline_point = self.goal.goalline_position
                 goalline_point.itemset(2, self.ball.radius)
                 goal_area_fr_world = goalline_point + self.goal.goal_area_fr[0] * goal_x + self.goal.goal_area_fr[1] * goal_y
                 goal_area_fl_world = goalline_point + self.goal.goal_area_fl[0] * goal_x + self.goal.goal_area_fl[1] * goal_y

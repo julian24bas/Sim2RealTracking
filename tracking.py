@@ -30,7 +30,6 @@ class Ball(object):
         self.visible = False
         self.moving = False
         self.last_positions = deque(maxlen=5)
-        self.position_calculated = False
 
     def track(self, image, field, dT):
         if field.set:
@@ -77,7 +76,6 @@ class Ball(object):
 
                 if position_delta > 2:
                     self.moving = True
-                    self.position_calculated = False
                     break
 
             else:
@@ -104,7 +102,7 @@ class Ball(object):
         return image_draw
 
     def calculate_position(self, field, matrix, distortion):
-        if not self.moving and self.visible and not self.position_calculated and field.set:
+        if not self.moving and self.visible and field.set:
             # pixel coordinate of ball center, z value of board
             dst = cv2.undistortPoints(np.array([[self.center_r]]), matrix, distortion, None, matrix)
             image_point = np.array([[dst[0][0][0]], [dst[0][0][1]], [1]])
@@ -138,9 +136,8 @@ class Ball(object):
             line_camera_point_project_board_unit = line_camera_point_project_board / np.linalg.norm(
                 line_camera_point_project_board)
             self.position = board_point - delta_board_point * line_camera_point_project_board_unit
-
-            print(self.position)
-            self.position_calculated = True
+        else:
+            print('Ball is moving, is occluded or field is not set.')
 
     def update_thresh(self):
         if self.color is 'red':
